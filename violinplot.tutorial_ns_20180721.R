@@ -13,26 +13,27 @@ library(ggplot2)
 library(dplyr)
 
 setwd("/Users/nicolestone/Desktop/20180719_yuzhang.violin.plots/") ## CHANGE THIS TO YOUR OWN PATH!!!
-alpha <- 0.95 #### QUANTILE TO PLOT -- CHANGE THIS TO THE % YOU WANT
 
 ddd = read.csv("WBC_2.csv")
 se <- function(x){sd(x)/sqrt(length(x))} # make a standard error function
 
-yudataSummary <- ddd %>% group_by(group) %>%
-  summarize(yudata_mean = mean(value),
+yudataSummary <- ddd %>% group_by(group) %>% summarize(yudata_mean = mean(value),
+            yudata_median = median(value),
             yudata_se = se(value),
             yudata_sd = sd(value),
             yudata_length = length(value),
             yudata_2se = 2*yudata_se,
-            yudata_quantile = qt(alpha, df=yudata_length), # Value of 95% percentile of data
-            error_bars = yudata_quantile) ### CHANGE THE VARIABLE AFTER THE "=" TO WHATEVER YOU WANT YOUR ERROR BARS TO REPRESENT, EXAMPLES: "yudata_2se" or "yudata_sd" or "yudata_quantile"
+            Qlow = quantile(value, probs=0.025),
+            Qhigh = quantile(value, probs=0.975)
+            )
 
 print(yudataSummary) # wow this is a useful tool!!
 
+#new
 p = ggplot(ddd, aes(group, value)) + geom_violin(trim = FALSE, fill = "grey75") + 
-  geom_point(aes(y = yudata_mean), color = "black", size = 2, data = yudataSummary) + 
-  geom_errorbar(aes(y = yudata_mean, ymin = yudata_mean-(error_bars), ymax = yudata_mean+(error_bars)), color = "black", width = 0.2, data = yudataSummary) + ylim(0, 15) + ggtitle("Violin plots for Yu Zhang!") 
+  geom_point(aes(y = yudata_median), color = "black", size = 2, data = yudataSummary) + 
+  geom_errorbar(aes(y = yudata_mean, ymin = Qlow, ymax = Qhigh), color = "black", width = 0.1, data = yudataSummary) + ylim(0, 15) + ggtitle("Violin plots for Yu Zhang!") 
 
 print(p)
 
-#### NOTE: I'm getting a warning when I run this, but my googling says it's a bug and should be fine.
+
